@@ -1,3 +1,4 @@
+from sys import exception
 import undetected_chromedriver as uc  # For bypassing bot detection
 from selenium.webdriver.common.by import By  # For locating elements
 from selenium.webdriver.common.keys import Keys  # For keyboard actions
@@ -7,6 +8,7 @@ import time  # For basic sleep delays
 from selenium.webdriver.chrome.options import Options
 from social_media_scraper.colors import ColorText
 import threading
+from social_media_scraper.randomizer import Randomizer
 
 # from fastapi import FastAPI from fastapi.websockets import WebSocket
 # import asyncio
@@ -230,5 +232,28 @@ class InstagramBot:
 
         # Over Here Now want to open up a tab with each page
         # Thing is we want to add a delay to all of this cuz we want to look realistic
+        size = len(reelsAndPosts) - 1
+        rand = Randomizer.randomize_3minutes()
+        while(size >= 0):
+            rand = Randomizer.randomize_3minutes()
+            self.driver.get(reelsAndPosts[0])
+            self.getPostCommentUserNames()
+            time.sleep(rand)
+            size = size - 1
+
+    def getPostCommentUserNames(self):
+        # //*[contains(@class, '_a9zc')]
+        if self.driver == None:
+            return
+        try:
+            userPath = "//*[contains(@class, 'x1i10hfl xjqpnuy xa49m3k xqeqjp1 x2hbi6w xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli x1hl2dhg xggy1nq x1ja2u2z x1t137rt x1q0g3np x1lku1pv x1a2a7pz x6s0dn4 xjyslct x1ejq31n xd10rxx x1sy0etr x17r0tee x9f619 x1ypdohk x1f6kntn xwhw2v2 xl56j7k x17ydfre x2b8uid xlyipyv x87ps6o x14atkfc xcdnw81 x1i0vuye xjbqb8w xm3z3ea x1x8b98j x131883w x16mih1h x972fbf xcfux6l x1qhh985 xm0m39n xt0psk2 xt7dq6l xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x1n5bzlp xqnirrm xj34u2y x568u83')]"
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, userPath))
+            )
+            userNames = self.driver.find_elements(By.XPATH, userPath)
+            print(userNames)
+        except Exception:
+            self.ct.printColored("Something Went wrong getting users from comments", color="red")
+        
 
 
