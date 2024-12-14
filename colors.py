@@ -1,5 +1,6 @@
 import time
 import sys
+import threading
 
 class ColorText:
     """
@@ -19,6 +20,24 @@ class ColorText:
     }
     RESET = "\033[0m"
     UNDERLINE = ";4m"
+    def loadingWhileScripting(self, func1, func2):
+        try:
+            func1.start()
+            func2.start()
+
+            func1.join()
+            func2.join()
+        except Exception as e:
+            self.printColored(f"Error during threading: {e}", color="red")
+    def getThreadForLoading(self, num, delay=0.1):
+        """
+        Creates a thread for the loading animation.
+
+        Args:
+            num (int): Number of loading steps.
+            delay (float): Delay (in seconds) between each step.
+        """
+        return threading.Thread(target=self.coolerLoading, args=(num,), kwargs={"delay": delay})
 
     def printColored(self, text, color="white", underline=False):
         """

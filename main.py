@@ -10,7 +10,7 @@ def run_bot():
     password = os.getenv('PASSWORD')
     # user_to_scan = 'aryan_rogye'
     user_to_scan = "chillguy.meme"
-    bot = InstagramBot(username, password, user_to_scan, True, max_retries=4)
+    bot = InstagramBot(username, password, user_to_scan, False, max_retries=5)
     bot.start()
 
 if __name__ == '__main__':

@@ -5,7 +5,6 @@ from selenium.webdriver.support.ui import WebDriverWait  # For explicit waits
 from selenium.webdriver.support import expected_conditions as EC  # For conditions in waits
 import time  # For basic sleep delays
 from selenium.webdriver.chrome.options import Options
-import sys
 from colors import ColorText
 import threading
 
@@ -26,10 +25,20 @@ class InstagramBot:
         self.user_to_scan = user_to_scan
         self.base_url = 'https://www.instagram.com/'
         self.headless = headless
-        self.driver = self.initDriver()
         self.max_retries = max_retries
+        self.driver = None
+        driverThread = threading.Thread(target=self.initDriverWrapper)
+        loadingThread = self.ct.getThreadForLoading(100)
+        self.ct.loadingWhileScripting(driverThread, loadingThread)
+
+    def initDriverWrapper(self):
+        """Wrapper method to initialize the Selenium driver."""
+        self.driver = self.initDriver()
 
     def start(self):
+        if self.driver == None:
+            self.ct.printColored("Driver is None", color="red")
+            return
         self.ct.printColored("Starting Script....", color="green")
         self.startScript()
         self.driver.quit()
@@ -60,22 +69,18 @@ class InstagramBot:
         self.ct.printColored("Driver initialized!", color="green")
         return driver
 
-    def loadingWhileScripting(self, func1, func2):
-        try:
-            func1.start()
-            func2.start()
-    
-            func1.join()
-            func2.join()
-        except Exception as e:
-            self.ct.printColored(f"Error during threading: {e}", color="red")
-
     def startScript(self) :
+        if self.driver == None:
+            self.ct.printColored("Driver is None", color="red")
+            return
+
         while (self.max_retries >= 0):
             try:
                 self.driver.get(self.base_url)
                 # THIS IS FOR NOT SIGNED IN
                 def signIn():
+                    if self.driver == None:
+                        return
                     try: 
                         WebDriverWait(self.driver, 10).until(
                             EC.presence_of_element_located((By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]"))
@@ -93,8 +98,8 @@ class InstagramBot:
                 # Retry the search functionality
                 # Create threads
                 signInThread = threading.Thread(target=signIn)
-                loadingThread = threading.Thread(target=self.ct.coolLoading, args=(3,), kwargs={"cooler": "True", "delay": 1})
-                self.loadingWhileScripting(signInThread, loadingThread)
+                loadingThread = self.ct.getThreadForLoading(100,delay=0.3)
+                self.ct.loadingWhileScripting(signInThread, loadingThread)
 
                 self.ct.printColored("Navigating back to the home page...", color="cyan")
                 self.driver.get(self.base_url)
@@ -164,6 +169,8 @@ class InstagramBot:
     
 
     def handlePosts(self, posts, maxTries = 3):
+        if self.driver == None:
+            return
         # First Check if Posts Exists
         links = []
         if posts:
@@ -185,22 +192,27 @@ class InstagramBot:
                 self.ct.printColored("Looking For Posts......", color="green")
                 # Wait for the container to load
                 post_links = [] # Store the post links
-                for i in range(maxTries):
-                    self.ct.printColored("Scrolling", color="cyan") 
-                    self.driver.execute_script("window.scrollBy(0, 500)")  # Scroll 1000 pixels
-                    # Wait for the container to load
-                    WebDriverWait(self.driver, 10).until(
-                        EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]"))
-                    )
+                def scroll():
+                    if self.driver == None:
+                        return
+                    for i in range(maxTries):
+                        self.driver.execute_script("window.scrollBy(0, 500)")  # Scroll 1000 pixels
+                        # Wait for the container to load
+                        WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]"))
+                        )
 
-                    # Locate all <a> elements with the specified class
-                    links = self.driver.find_elements(By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
-                    # Extract the href attribute for each link
-                    for link in links:
-                        href = link.get_attribute("href")
-                        # if href and ("/reel/" in href or "/p/" in href):  # Only collect post/reel links
-                        post_links.append(href)
-                    time.sleep(1)
+                        # Locate all <a> elements with the specified class
+                        links = self.driver.find_elements(By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
+                        # Extract the href attribute for each link
+                        for link in links:
+                            href = link.get_attribute("href")
+                            # if href and ("/reel/" in href or "/p/" in href):  # Only collect post/reel links
+                            post_links.append(href)
+                        time.sleep(1)
+                scrollThread = threading.Thread(target=scroll)
+                scrollLoading = self.ct.getThreadForLoading(100)
+                self.ct.loadingWhileScripting(scrollThread, scrollLoading)
 
                 self.ct.printColored("Done looping through the links", color="green")
                 # The post_links has repeats so get rid of them
@@ -209,8 +221,14 @@ class InstagramBot:
                 links = unique_links
             except Exception:
                 print("There was an error looking for the posts")
-
+        
+        reelsAndPosts = []
         for i in links:
             if ".meme" in f"{i}":
+                reelsAndPosts.append(i) 
                 self.ct.printColored(i, color="yellow")
+
+        # Over Here Now want to open up a tab with each page
+        # Thing is we want to add a delay to all of this cuz we want to look realistic
+
 
