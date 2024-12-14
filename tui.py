@@ -1,0 +1,11 @@
+import blessed
+
+# SHIT WE NEED
+# NEED A WAY TO PASS IN VALUES
+# NEED A WAY TO UPDATE THE SCREEN WITH THE VALUES
+# NEED INPUT FOR THE USER
+# NEED OLD USERS STORED_IN FILE FOR TESTING 
+class TUI:
+    def __init__(self) -> None:
+        pass
+    pass
