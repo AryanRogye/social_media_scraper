@@ -1,5 +1,5 @@
-import threading
-
+import os
+from dotenv import load_dotenv # For loading environment variables
 from run import InstagramBot
 
 

@@ -5,11 +5,7 @@ from selenium.webdriver.common.keys import Keys  # For keyboard actions
 from selenium.webdriver.support.ui import WebDriverWait  # For explicit waits
 from selenium.webdriver.support import expected_conditions as EC  # For conditions in waits
 import time  # For basic sleep delays
-from dotenv import load_dotenv # For loading environment variables
-import os  # For accessing environment variables
 from selenium.webdriver.chrome.options import Options
-import sys
-import threading
 
 # from fastapi import FastAPI from fastapi.websockets import WebSocket
 # import asyncio
@@ -128,7 +124,6 @@ class InstagramBot:
 
 
             
-                 
             
             # if following: 
             #     following_text_xpath = f"//*[contains(@class, 'html-span xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x1hl2dhg x16tdsg8 x1vvkbs') and text()='{following}']"
@@ -188,6 +183,8 @@ class InstagramBot:
                     print("Done looping through the links")
                     for i in post_links:
                         print(i)
+
+                # The post_links has repeats so get rid of them
 
 
             except Exception as e:
