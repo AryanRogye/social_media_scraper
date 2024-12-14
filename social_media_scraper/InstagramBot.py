@@ -74,7 +74,7 @@ class InstagramBot:
 
         # Initialize undetected_chromedriver with the updated options
         driver = uc.Chrome(options=options, use_subprocess=True)
-        self.ct.printColored("Driver initialized!", color="green")
+        self.ct.printColored("\nDriver initialized!", color="green")
         return driver
 
     def startScript(self) :

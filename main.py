@@ -1,37 +1,65 @@
 import os
 from dotenv import load_dotenv # For loading environment variables
 from social_media_scraper.InstagramBot import InstagramBot
+from social_media_scraper.colors import ColorText
 import argparse
 
-
-def run_bot():
+def run_gui(file):
+    print("GUIIIII")
+    pass
+def run_bot(user_to_scan, headless, retries):
+    # Print The Values For The User
+    ColorText().printColored(f"Checking {user_to_scan} Insta Account", color="cyan", underline=True)
+    ColorText().coolerLoading(10)
+    ColorText().printColored(f"Retries Set To -- {retries} Insta Account", color="cyan", underline=True)
+    ColorText().coolerLoading(10)
+    ColorText().printColored(f"Headless Set To -- {headless} Insta Account", color="cyan", underline=True)
     # GET FROM ENVIRONMENT VARIABLES
     load_dotenv()
     username = os.getenv('USERNAME')
     password = os.getenv('PASSWORD')
-    # user_to_scan = 'aryan_rogye'
-    user_to_scan = "chillguy.meme"
-    bot = InstagramBot(username, password, user_to_scan, True, max_retries=2)
+    bot = InstagramBot(username, password, user_to_scan, headless, retries)
     bot.start()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Instagram Bot.")
-    parser.add_argument(
-        "-h",
-        type=str,
-        default="",
-        help=""
-    )
-    parser.add_argument(
+    # Define subcommands
+    subparsers = parser.add_subparsers(dest="command", required=True, help="Choose a mode to run: parse or gui")
+
+    # Parser subcommand
+    parser_parse = subparsers.add_parser("parse", help="Run the parser to scrape Instagram accounts.")
+    parser_parse.add_argument(
         "-u", "--username",
         type=str,
-        default="",
-        help="Instagram username to Parse"            
+        required=True,
+        help="Instagram username to parse."
     )
-    parser.add_argument(
-        "-p", "--parse",
-        type=bool,
-        default=False,
-        help="To Activate Parser",
+    parser_parse.add_argument(
+        "-r", "--retries",
+        type=int,
+        default=3,
+        help="Maximum retries for errors. Default: 3."
     )
-    run_bot()
+    parser_parse.add_argument(
+        "-head", "--headless",
+        action="store_false",
+        help="Run browser with a visible window (default: headless mode)."
+    )
+    # GUI subcommand
+    parser_gui = subparsers.add_parser("gui", help="Run the GUI for managing and visualizing logs.")
+    parser_gui.add_argument(
+        "-f", "--file",
+        type=str,
+        required=True,
+        help="Log file to load into the GUI."
+    )
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Run the bot
+    if args.command == "parse":
+        run_bot(args.username, args.headless, args.retries)
+    elif args.command == "gui":
+        run_gui(args.file)
+
