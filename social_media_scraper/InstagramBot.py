@@ -1,3 +1,4 @@
+from datetime import datetime
 import undetected_chromedriver as uc  # For bypassing bot detection
 from selenium.webdriver.common.by import By  # For locating elements
 from selenium.webdriver.common.keys import Keys  # For keyboard actions
@@ -7,6 +8,7 @@ import time  # For basic sleep delays
 from selenium.webdriver.chrome.options import Options
 from social_media_scraper.colors import ColorText
 import threading
+import os
 
 from social_media_scraper.randomizer import Randomizer
 
@@ -33,7 +35,7 @@ class InstagramBot:
         self.driver_lock = threading.Lock()
 
         driverThread = threading.Thread(target=self.initDriverWrapper)
-        loadingThread = self.ct.getThreadForLoading(100)
+        loadingThread = self.ct.getThreadForLoading(20)
         self.ct.loadingWhileScripting(driverThread, loadingThread)
 
     def initDriverWrapper(self):
@@ -107,7 +109,7 @@ class InstagramBot:
                 # Retry the search functionality
                 # Create threads
                 signInThread = threading.Thread(target=signIn)
-                loadingThread = self.ct.getThreadForLoading(100,delay=0.3)
+                loadingThread = self.ct.getThreadForLoading(15)
                 self.ct.loadingWhileScripting(signInThread, loadingThread)
 
                 self.ct.printColored("Navigating back to the home page...", color="cyan")
@@ -196,7 +198,7 @@ class InstagramBot:
                     return
 
                 self.ct.printColored("Waiting For Screen To Load...", color="magenta", underline=True)
-                self.ct.coolLoading(10, cooler=True)
+                self.ct.coolerLoading(10)
 
                 self.ct.printColored("Looking For Posts......", color="green")
                 # Wait for the container to load
@@ -221,7 +223,7 @@ class InstagramBot:
                                 post_links.append(href)
                             time.sleep(1)
                 scrollThread = threading.Thread(target=scroll)
-                scrollLoading = self.ct.getThreadForLoading(100)
+                scrollLoading = self.ct.getThreadForLoading(10)
                 self.ct.loadingWhileScripting(scrollThread, scrollLoading)
 
                 self.ct.printColored("Done looping through the links", color="green")
@@ -235,29 +237,95 @@ class InstagramBot:
         reelsAndPosts = []
         for i in links:
             if ".meme" in f"{i}":
-                reelsAndPosts.append(i) 
-                self.ct.printColored(i, color="yellow")
+                # Check if the end is a /# because we dont want this
+                if not i[-2:] == '/#':
+                    reelsAndPosts.append(i) 
+                    self.ct.printColored(i, color="yellow")
 
         # Over Here Now want to open up a tab with each page
         # Thing is we want to add a delay to all of this cuz we want to look realistic
         size = len(reelsAndPosts) - 1
-        rand = Randomizer.randomize_3minutes()
+        rand = Randomizer.randomize_1minutes()
+        users = {}
         while (size >= 0):
-            rand = Randomizer.randomize_3minutes()
-            self.driver.get(reelsAndPosts[size])
-            self.getCommentUsers(reelsAndPosts[size])
-            time.sleep(rand)
+            self.ct.printColored("Randomizing", color="magenta")
+            rand = Randomizer.randomize_1minutes()
+            def delay_function():
+                self.ct.printColored(f"Time Before Loading {reelsAndPosts[size]}:|{rand}| Seconds", "yellow")
+                time.sleep(rand)
+
+            delayThread = threading.Thread(target=delay_function)
+            timeThread = self.ct.getThreadForLoading(rand)
+            self.ct.loadingWhileScripting(delayThread, timeThread)
+
+            def gettingWebsite():
+                if self.driver == None:
+                    return
+                with self.driver_lock:
+                    self.driver.get(reelsAndPosts[size])
+            websiteThread = threading.Thread(target=gettingWebsite)
+            self.ct.printColored(f"Loading Website{reelsAndPosts[size]}", color="cyan")
+            timeThread = self.ct.getThreadForLoading(10)
+            self.ct.loadingWhileScripting(websiteThread, timeThread)
+
+            users[reelsAndPosts[size]] = self.getCommentUsers(reelsAndPosts[size])
+
             size = size - 1
 
-    def getCommentUsers(self, website):
+        self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+        self.ct.printColored("Done Getting Users - ", color="green")
+        self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+        unique_users = set()
+        for key, user_list in users.items():
+            self.ct.printColored(f"Getting Uniqe Values From {key}", color="magenta")
+            time.sleep(1)
+            for user in user_list:
+                unique_users.add(user)
+
+        self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+        for user in unique_users:
+            self.ct.printColored(f"{user}", color="green") 
+            self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+
+        # Write the unique users to a file
+
+        # Create a folder named after the user_to_scan
+        folder_name = f"logs/{self.user_to_scan}"
+
+        os.makedirs(folder_name, exist_ok=True)  # Creates the folder if it doesn't exist, no error if it does.
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        log_file = f"{folder_name}/{self.user_to_scan}_{timestamp}.log" 
+        with open(log_file, "w") as f:
+            for user in unique_users:
+                f.write(user + "\n")
+        self.ct.printColored(f"Users have been logged to {log_file}", color="cyan")
+
+    def getCommentUsers(self, website, rand=1):
         userPath = "//*[contains(@class, 'x1i10hfl xjqpnuy xa49m3k xqeqjp1 x2hbi6w xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli x1hl2dhg xggy1nq x1ja2u2z x1t137rt x1q0g3np x1lku1pv x1a2a7pz x6s0dn4 xjyslct x1ejq31n xd10rxx x1sy0etr x17r0tee x9f619 x1ypdohk x1f6kntn xwhw2v2 xl56j7k x17ydfre x2b8uid xlyipyv x87ps6o x14atkfc xcdnw81 x1i0vuye xjbqb8w xm3z3ea x1x8b98j x131883w x16mih1h x972fbf xcfux6l x1qhh985 xm0m39n xt0psk2 xt7dq6l xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x1n5bzlp xqnirrm xj34u2y x568u83')]"
-        if self.driver == None:
-            return
-        try:
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, userPath))
-            )
-            userNames = self.driver.find_elements(By.XPATH, userPath)
-            print(userNames)
-        except Exception:
-            self.ct.printColored(f"There was a problem getting the users from the comments of the post - {website}", color="red")
+        users = []
+        def getNames():
+            with self.driver_lock:
+                if self.driver == None:
+                    return
+                try:
+                    WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, userPath))
+                    )
+                    userNames = self.driver.find_elements(By.XPATH, userPath)
+                    for user in userNames:
+                        users.append(user.get_attribute("href"))
+                except Exception:
+                    self.ct.printColored(f"There was a problem getting the users from the comments of the post - {website}", color="red")
+
+        namesThread = threading.Thread(target=getNames)
+        randDelay = f"0.{rand}"
+        delay = float(randDelay)
+        namesThreadLoading = self.ct.getThreadForLoading(10, delay=delay)
+        self.ct.loadingWhileScripting(namesThread, namesThreadLoading)
+
+
+
+        for user in users:
+            self.ct.printColored(f"\t{user}", color="green")
+        return users

@@ -56,6 +56,27 @@ class Randomizer:
         # Store the value for additional entropy in subsequent calls
         Randomizer.oldRand = rand_value
         return rand_value
+    @staticmethod
+    def randomize_1minutes():
+        # Step 1: Get a base random delay between 0 and 60 seconds
+        base_delay = Randomizer.randomize(lower=0, higher=60)
+    
+        # Step 2: Introduce a mix factor (small random integer)
+        mix_factor = Randomizer.randomize(lower=1, higher=10)
+    
+        # Step 3: Transform the base delay with a mix factor and mod by 61 to stay in the 0–60 range
+        transformed_delay = (base_delay * mix_factor) % 61
+    
+        # Step 4: Add additional randomness with XOR using a shift seed
+        shift_seed = Randomizer.randomize(lower=0, higher=255)  # 0–255 for a full byte of randomness
+        transformed_delay = (transformed_delay ^ shift_seed) % 61
+    
+        # Step 5: Apply a bias for slight unpredictability
+        bias = Randomizer.randomize(lower=-5, higher=5)
+        transformed_delay = max(0, min(60, transformed_delay + bias))
+    
+        # Ensure the transformed delay stays between 0 and 60
+        return transformed_delay
 
     @staticmethod
     def randomize_3minutes():

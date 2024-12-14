@@ -1,6 +1,7 @@
 import time
 import sys
 import threading
+import random
 
 class ColorText:
     """
@@ -37,11 +38,8 @@ class ColorText:
             num (int): Number of loading steps.
             delay (float): Delay (in seconds) between each step.
         """
-        from social_media_scraper.randomizer import Randomizer
-
-        # Generate a random number between 0 and max_val using Randomizer
-        num = Randomizer.randomize(lower=0, higher=max_val)
-        return threading.Thread(target=self.coolerLoading, args=(num,), kwargs={"delay": delay})
+        max_val = int(max_val / delay)
+        return threading.Thread(target=self.coolerLoading, args=(max_val,), kwargs={"delay": delay})
 
     def printColored(self, text, color="white", underline=False):
         """
@@ -51,19 +49,27 @@ class ColorText:
         style = f"{color_code[:-1]}{self.UNDERLINE}" if underline else color_code
         print(f"{style}{text}{self.RESET}")
 
-    # Cool Loading with Optional Spinner Animation
+
     def coolerLoading(self, num, delay=0.1):
         """
-        Displays a spinner animation using Braille characters.
-    
+        Displays a spinner animation using Braille characters, with a random color for each character.
+
         Args:
             num (int): Number of steps in the spinner animation.
             delay (float): Time delay (in seconds) between updates.
         """
         spinner = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"  # Braille spinner
+
+        # Extract color keys (e.g., 'red', 'green', etc.)
+        color_keys = list(self.COLORS.keys())
+
         for i in range(num):
+            # Pick a random color key
+            rand_color_key = random.choice(color_keys)
+            color_code = self.COLORS[rand_color_key]
+
             char = spinner[i % len(spinner)]
-            sys.stdout.write(f"\r\033[92m{char}\033[0m")  # Green spinner character
+            sys.stdout.write(f"\r{color_code}{char}{self.RESET}")  
             sys.stdout.flush()
             time.sleep(delay)
         print()  # Print a newline after the animation ends
