@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.options import Options
 from social_media_scraper.colors import ColorText
 import threading
 
+from social_media_scraper.randomizer import Randomizer
+
 # from fastapi import FastAPI from fastapi.websockets import WebSocket
 # import asyncio
 
@@ -27,13 +29,17 @@ class InstagramBot:
         self.headless = headless
         self.max_retries = max_retries
         self.driver = None
+
+        self.driver_lock = threading.Lock()
+
         driverThread = threading.Thread(target=self.initDriverWrapper)
         loadingThread = self.ct.getThreadForLoading(100)
         self.ct.loadingWhileScripting(driverThread, loadingThread)
 
     def initDriverWrapper(self):
         """Wrapper method to initialize the Selenium driver."""
-        self.driver = self.initDriver()
+        with self.driver_lock:
+            self.driver = self.initDriver()
 
     def start(self):
         if self.driver == None:
@@ -73,28 +79,31 @@ class InstagramBot:
         if self.driver == None:
             self.ct.printColored("Driver is None", color="red")
             return
-
         while (self.max_retries >= 0):
             try:
-                self.driver.get(self.base_url)
+                with self.driver_lock:
+                    self.driver.get(self.base_url)
                 # THIS IS FOR NOT SIGNED IN
+
                 def signIn():
-                    if self.driver == None:
-                        return
-                    try: 
-                        WebDriverWait(self.driver, 10).until(
-                            EC.presence_of_element_located((By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]"))
-                        )
-                        username_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]")
-                        username_input.send_keys(self.username)
+                    with self.driver_lock:
+                        if self.driver == None:
+                            return
+                        try: 
+                            WebDriverWait(self.driver, 10).until(
+                                EC.presence_of_element_located((By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]"))
+                            )
+                            username_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]")
+                            username_input.send_keys(self.username)
 
-                        password_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Password')]")
-                        password_input.send_keys(self.password)
+                            password_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Password')]")
+                            password_input.send_keys(self.password)
 
-                        login_button = self.driver.find_element(By.XPATH, "//*[contains(@class, 'acan _acap _acas _aj1- _ap30')]")
-                        login_button.click()
-                    except Exception:
-                        self.ct.printColored("This Is Good You Are Signed In Already So Nothing U need to do", color="cyan")
+                            login_button = self.driver.find_element(By.XPATH, "//*[contains(@class, 'acan _acap _acas _aj1- _ap30')]")
+                            login_button.click()
+                        except Exception:
+                            self.ct.printColored("This Is Good You Are Signed In Already So Nothing U need to do", color="cyan")
+
                 # Retry the search functionality
                 # Create threads
                 signInThread = threading.Thread(target=signIn)
@@ -195,21 +204,22 @@ class InstagramBot:
                 def scroll():
                     if self.driver == None:
                         return
-                    for i in range(maxTries):
-                        self.driver.execute_script("window.scrollBy(0, 500)")  # Scroll 1000 pixels
-                        # Wait for the container to load
-                        WebDriverWait(self.driver, 10).until(
-                            EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]"))
-                        )
+                    with self.driver_lock:
+                        for i in range(maxTries):
+                            self.driver.execute_script("window.scrollBy(0, 500)")  # Scroll 1000 pixels
+                            # Wait for the container to load
+                            WebDriverWait(self.driver, 10).until(
+                                EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]"))
+                            )
 
-                        # Locate all <a> elements with the specified class
-                        links = self.driver.find_elements(By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
-                        # Extract the href attribute for each link
-                        for link in links:
-                            href = link.get_attribute("href")
-                            # if href and ("/reel/" in href or "/p/" in href):  # Only collect post/reel links
-                            post_links.append(href)
-                        time.sleep(1)
+                            # Locate all <a> elements with the specified class
+                            links = self.driver.find_elements(By.XPATH, "//a[contains(@class, 'x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
+                            # Extract the href attribute for each link
+                            for link in links:
+                                href = link.get_attribute("href")
+                                # if href and ("/reel/" in href or "/p/" in href):  # Only collect post/reel links
+                                post_links.append(href)
+                            time.sleep(1)
                 scrollThread = threading.Thread(target=scroll)
                 scrollLoading = self.ct.getThreadForLoading(100)
                 self.ct.loadingWhileScripting(scrollThread, scrollLoading)

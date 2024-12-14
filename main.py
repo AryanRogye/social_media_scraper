@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv # For loading environment variables
-from run import InstagramBot
+from social_media_scraper.InstagramBot import InstagramBot
 
 
 def run_bot():

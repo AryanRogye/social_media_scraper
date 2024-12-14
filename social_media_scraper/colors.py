@@ -29,7 +29,7 @@ class ColorText:
             func2.join()
         except Exception as e:
             self.printColored(f"Error during threading: {e}", color="red")
-    def getThreadForLoading(self, num, delay=0.1):
+    def getThreadForLoading(self, max_val, delay=0.1):
         """
         Creates a thread for the loading animation.
 
@@ -37,6 +37,10 @@ class ColorText:
             num (int): Number of loading steps.
             delay (float): Delay (in seconds) between each step.
         """
+        from social_media_scraper.randomizer import Randomizer
+
+        # Generate a random number between 0 and max_val using Randomizer
+        num = Randomizer.randomize(lower=0, higher=max_val)
         return threading.Thread(target=self.coolerLoading, args=(num,), kwargs={"delay": delay})
 
     def printColored(self, text, color="white", underline=False):
