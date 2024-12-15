@@ -4,4 +4,4 @@ logs/*
 __pycache__/
 ./social_media_scraper/__pycache__
 *.pyc
-./.DS_Store
+.DS_Store
