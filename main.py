@@ -1,8 +1,10 @@
+import curses
 import os
 from dotenv import load_dotenv # For loading environment variables
 from social_media_scraper.InstagramBot import InstagramBot
 from social_media_scraper.colors import ColorText
 import argparse
+from social_media_scraper.logs_parser_tui import logsT
 
 def run_gui(file):
     print("GUIIIII")
@@ -31,7 +33,6 @@ if __name__ == '__main__':
     parser_parse.add_argument(
         "-u", "--username",
         type=str,
-        required=True,
         help="Instagram username to parse."
     )
     parser_parse.add_argument(
@@ -45,21 +46,16 @@ if __name__ == '__main__':
         action="store_false",
         help="Run browser with a visible window (default: headless mode On)."
     )
-    # GUI subcommand
-    parser_gui = subparsers.add_parser("gui", help="Run the GUI for managing and visualizing logs.")
-    parser_gui.add_argument(
-        "-f", "--file",
-        type=str,
-        required=True,
-        help="Log file to load into the GUI."
-    )
-
+    
     # Parse arguments
     args = parser.parse_args()
-
-    # Run the bot
+    username = args.username
     if args.command == "parse":
-        run_bot(args.username, args.headless, args.retries)
+        if not args.username:
+            print("No username provided. Please specify --username or choose a saved username.")
+            # Add logic to pick a username from logs or exit
+            username = curses.wrapper(logsT)
+        run_bot(username, args.headless, args.retries)
     elif args.command == "gui":
         run_gui(args.file)
-
+    

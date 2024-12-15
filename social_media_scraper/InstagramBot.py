@@ -104,7 +104,7 @@ class InstagramBot:
                             login_button = self.driver.find_element(By.XPATH, "//*[contains(@class, 'acan _acap _acas _aj1- _ap30')]")
                             login_button.click()
                         except Exception:
-                            self.ct.printColored("\nThis Is Good You Are Signed In Already So Nothing U need to do\nFinishing Other Things\n", color="cyan")
+                            self.ct.printColored("\nThis Is Good You Are Signed In Already So Nothing U need to do\nFinishing Other Things", color="cyan")
 
                 # Retry the search functionality
                 # Create threads
@@ -155,12 +155,12 @@ class InstagramBot:
                     followers = li_elements[1].text
                     following = li_elements[2].text
                     # Strip the names
-                    posts = posts.strip(" posts")
-                    followers = followers.strip(" followers")
-                    following = following.strip(" following")
-
+                    posts = posts.replace(" posts", "").replace(",", "").replace("K", "000")
+                    followers = followers.replace(" followers", "").replace(",", "").replace("K", "000")
+                    following = following.replace(" following", "").replace(",", "").replace("K", "000")
                 except Exception:
                     self.ct.printColored("There was an Error handing the information", color="red")
+
                 self.ct.printColored(f"{self.user_to_scan} Following - {following}", color="white", underline=True)
                 self.ct.printColored(f"{self.user_to_scan} Followers - {followers}", color="white", underline=True)
                 self.ct.printColored(f"{self.user_to_scan} Posts - {posts}", color="white", underline=True)
