@@ -35,7 +35,7 @@ class InstagramBot:
         self.driver_lock = threading.Lock()
 
         driverThread = threading.Thread(target=self.initDriverWrapper)
-        loadingThread = self.ct.getThreadForLoading(20)
+        loadingThread = self.ct.getThreadForLoading(15)
         self.ct.loadingWhileScripting(driverThread, loadingThread)
 
     def initDriverWrapper(self):
@@ -47,7 +47,7 @@ class InstagramBot:
         if self.driver == None:
             self.ct.printColored("Driver is None", color="red")
             return
-        self.ct.printColored("Starting Script....", color="green")
+        self.ct.printColored("Starting Script....", color="green", underline=True)
         self.startScript()
         self.driver.quit()
 
@@ -74,7 +74,7 @@ class InstagramBot:
 
         # Initialize undetected_chromedriver with the updated options
         driver = uc.Chrome(options=options, use_subprocess=True)
-        self.ct.printColored("\nDriver initialized!", color="green")
+        self.ct.printColored("\nDriver initialized!\nInitializing Other Things", color="cyan", underline=True)
         return driver
 
     def startScript(self) :
@@ -104,7 +104,7 @@ class InstagramBot:
                             login_button = self.driver.find_element(By.XPATH, "//*[contains(@class, 'acan _acap _acas _aj1- _ap30')]")
                             login_button.click()
                         except Exception:
-                            self.ct.printColored("This Is Good You Are Signed In Already So Nothing U need to do", color="cyan")
+                            self.ct.printColored("\nThis Is Good You Are Signed In Already So Nothing U need to do\nFinishing Other Things\n", color="cyan")
 
                 # Retry the search functionality
                 # Create threads
@@ -161,7 +161,9 @@ class InstagramBot:
 
                 except Exception:
                     self.ct.printColored("There was an Error handing the information", color="red")
-
+                self.ct.printColored(f"{self.user_to_scan} Following - {following}", color="white", underline=True)
+                self.ct.printColored(f"{self.user_to_scan} Followers - {followers}", color="white", underline=True)
+                self.ct.printColored(f"{self.user_to_scan} Posts - {posts}", color="white", underline=True)
                 self.handlePosts(posts, self.max_retries)
                 self.ct.printColored("Script completed successfully!", color="green")
                 break
@@ -197,10 +199,10 @@ class InstagramBot:
                     self.ct.printColored("Posts Are 0 Exiting........", color="red")
                     return
 
-                self.ct.printColored("Waiting For Screen To Load...", color="magenta", underline=True)
+                self.ct.printColored("Waiting For Screen To Load...", color="cyan", underline=True)
                 self.ct.coolerLoading(10)
 
-                self.ct.printColored("Looking For Posts......", color="green")
+                self.ct.printColored("Looking For Posts......", color="cyan", underline=True)
                 # Wait for the container to load
                 post_links = [] # Store the post links
                 def scroll():
@@ -229,29 +231,39 @@ class InstagramBot:
                 self.ct.printColored("Done looping through the links", color="green")
                 # The post_links has repeats so get rid of them
                 unique_links = set(post_links)
-                self.ct.printColored("Done Making UniqueSet", color="blue")
+                self.ct.printColored("Done Making UniqueSet", color="cyan", underline=True)
                 links = unique_links
             except Exception:
                 print("There was an error looking for the posts")
-        
+        else:
+            self.ct.printColored("Couldnt Find Posts", color="red")
         reelsAndPosts = []
         for i in links:
-            if ".meme" in f"{i}":
+            if i[-7:] == "/reels/":
+                continue
+            if ".meme" in f"{i}" or "reel" in f"{i}" or "/p/" in f"{i}":
                 # Check if the end is a /# because we dont want this
                 if not i[-2:] == '/#':
                     reelsAndPosts.append(i) 
                     self.ct.printColored(i, color="yellow")
-
+         
         # Over Here Now want to open up a tab with each page
         # Thing is we want to add a delay to all of this cuz we want to look realistic
         size = len(reelsAndPosts) - 1
-        rand = Randomizer.randomize_1minutes()
+        rand = Randomizer.randomize_30sec()
         users = {}
         while (size >= 0):
-            self.ct.printColored("Randomizing", color="magenta")
-            rand = Randomizer.randomize_1minutes()
-            def delay_function():
-                self.ct.printColored(f"Time Before Loading {reelsAndPosts[size]}:|{rand}| Seconds", "yellow")
+            self.ct.printColored("Randomizing", color="cyan")
+            if rand % 2 == 0:
+                rand = Randomizer.randomize_15sec()
+            else:
+                rand = Randomizer.randomize_30sec()
+
+            self.ct.printSeparator()
+            self.ct.printColored(f"Remaining Websites --{size+1}", color="cyan", underline=True)
+            self.ct.printColored(f"Time Before Loading\n|{reelsAndPosts[size]}|:|{rand}| Seconds", color="yellow")
+            self.ct.printSeparator()
+            def delay_function(): 
                 time.sleep(rand)
 
             delayThread = threading.Thread(target=delay_function)
@@ -264,28 +276,30 @@ class InstagramBot:
                 with self.driver_lock:
                     self.driver.get(reelsAndPosts[size])
             websiteThread = threading.Thread(target=gettingWebsite)
-            self.ct.printColored(f"Loading Website{reelsAndPosts[size]}", color="cyan")
+            self.ct.printColored(f"Loading Website {reelsAndPosts[size]}", color="cyan")
             timeThread = self.ct.getThreadForLoading(10)
             self.ct.loadingWhileScripting(websiteThread, timeThread)
-
+            
+            self.ct.printColored(f"Parsing {reelsAndPosts[size]} comments", color="cyan")
             users[reelsAndPosts[size]] = self.getCommentUsers(reelsAndPosts[size])
 
             size = size - 1
 
-        self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
-        self.ct.printColored("Done Getting Users - ", color="green")
-        self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+        self.ct.printSeparator()
+        self.ct.printColored("Done Getting Users - ", color="green") 
+        self.ct.printSeparator()
+
         unique_users = set()
         for key, user_list in users.items():
-            self.ct.printColored(f"Getting Uniqe Values From {key}", color="magenta")
+            self.ct.printColored(f"Getting Uniqe Values From {key}", color="cyan")
             time.sleep(1)
             for user in user_list:
                 unique_users.add(user)
 
-        self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+        self.ct.printSeparator()
         for user in unique_users:
             self.ct.printColored(f"{user}", color="green") 
-            self.ct.printColored(f"-----------------------------------------------------------------------------------------------------------", color="green")
+            self.ct.printSeparator()
 
         # Write the unique users to a file
 
@@ -300,6 +314,7 @@ class InstagramBot:
             for user in unique_users:
                 f.write(user + "\n")
         self.ct.printColored(f"Users have been logged to {log_file}", color="cyan")
+        # THIS IS THE END FOR NOW
 
     def getCommentUsers(self, website, rand=1):
         userPath = "//*[contains(@class, 'x1i10hfl xjqpnuy xa49m3k xqeqjp1 x2hbi6w xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli x1hl2dhg xggy1nq x1ja2u2z x1t137rt x1q0g3np x1lku1pv x1a2a7pz x6s0dn4 xjyslct x1ejq31n xd10rxx x1sy0etr x17r0tee x9f619 x1ypdohk x1f6kntn xwhw2v2 xl56j7k x17ydfre x2b8uid xlyipyv x87ps6o x14atkfc xcdnw81 x1i0vuye xjbqb8w xm3z3ea x1x8b98j x131883w x16mih1h x972fbf xcfux6l x1qhh985 xm0m39n xt0psk2 xt7dq6l xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x1n5bzlp xqnirrm xj34u2y x568u83')]"
@@ -321,6 +336,8 @@ class InstagramBot:
         namesThread = threading.Thread(target=getNames)
         randDelay = f"0.{rand}"
         delay = float(randDelay)
+        if delay == 0.0:
+            delay = 0.1
         namesThreadLoading = self.ct.getThreadForLoading(10, delay=delay)
         self.ct.loadingWhileScripting(namesThread, namesThreadLoading)
 

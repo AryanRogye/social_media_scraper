@@ -19,6 +19,15 @@ class Randomizer:
         )
         # Hash the combined entropy for even distribution
         return hashlib.sha256(entropy.encode()).hexdigest()
+    @staticmethod
+    def _randomize_with_entropy(base_range, transform_mod, max_bias):
+        base_delay = Randomizer.randomize(lower=0, higher=base_range)
+        mix_factor = Randomizer.randomize(lower=1, higher=10)
+        transformed_delay = (base_delay * mix_factor) % transform_mod
+        shift_seed = Randomizer.randomize(lower=0, higher=255)
+        transformed_delay = (transformed_delay ^ shift_seed) % transform_mod
+        bias = Randomizer.randomize(lower=-max_bias, higher=max_bias)
+        return max(0, min(base_range, transformed_delay + bias))
 
     @staticmethod
     def _mix_entropy(seed_value):
@@ -57,45 +66,15 @@ class Randomizer:
         Randomizer.oldRand = rand_value
         return rand_value
     @staticmethod
+    def randomize_15sec():
+        return Randomizer._randomize_with_entropy(15, 16, 5)
+    @staticmethod
+    def randomize_30sec():
+        return Randomizer._randomize_with_entropy(30, 31, 5) 
+    @staticmethod
     def randomize_1minutes():
-        # Step 1: Get a base random delay between 0 and 60 seconds
-        base_delay = Randomizer.randomize(lower=0, higher=60)
+        return Randomizer._randomize_with_entropy(60, 61, 5)
     
-        # Step 2: Introduce a mix factor (small random integer)
-        mix_factor = Randomizer.randomize(lower=1, higher=10)
-    
-        # Step 3: Transform the base delay with a mix factor and mod by 61 to stay in the 0–60 range
-        transformed_delay = (base_delay * mix_factor) % 61
-    
-        # Step 4: Add additional randomness with XOR using a shift seed
-        shift_seed = Randomizer.randomize(lower=0, higher=255)  # 0–255 for a full byte of randomness
-        transformed_delay = (transformed_delay ^ shift_seed) % 61
-    
-        # Step 5: Apply a bias for slight unpredictability
-        bias = Randomizer.randomize(lower=-5, higher=5)
-        transformed_delay = max(0, min(60, transformed_delay + bias))
-    
-        # Ensure the transformed delay stays between 0 and 60
-        return transformed_delay
-
     @staticmethod
     def randomize_3minutes():
-        # Step 1: Get a base random delay between 0 and 180 seconds
-        base_delay = Randomizer.randomize(lower=0, higher=180)
-        
-        # Step 2: Introduce a mix factor (small random integer)
-        mix_factor = Randomizer.randomize(lower=1, higher=10)
-        
-        # Multiply and mod by 181 to ensure we remain in the 0–180 range
-        transformed_delay = (base_delay * mix_factor) % 181
-        
-        # Step 3: Get another random value to use in a bitwise operation
-        shift_seed = Randomizer.randomize(lower=0, higher=255)  # 0–255 for a full byte of randomness
-        
-        # XOR the transformed delay with shift_seed, then mod again to stay in range
-        transformed_delay = (transformed_delay ^ shift_seed) % 181
-        
-        # Step 4: Add a final layer: another random call to slightly bias the result
-        bias = Randomizer.randomize(lower=-5, higher=5)
-        transformed_delay = max(0, min(180, transformed_delay + bias)) 
-        return transformed_delay
+        return Randomizer._randomize_with_entropy(180, 181, 5)

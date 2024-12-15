@@ -11,9 +11,9 @@ def run_bot(user_to_scan, headless, retries):
     # Print The Values For The User
     ColorText().printColored(f"Checking {user_to_scan} Insta Account", color="cyan", underline=True)
     ColorText().coolerLoading(10)
-    ColorText().printColored(f"Retries Set To -- {retries} Insta Account", color="cyan", underline=True)
+    ColorText().printColored(f"Retries Set To: |{retries}|", color="green", underline=True)
     ColorText().coolerLoading(10)
-    ColorText().printColored(f"Headless Set To -- {headless} Insta Account", color="cyan", underline=True)
+    ColorText().printColored(f"Headless Set To:  |{headless}|", color="green", underline=True)
     # GET FROM ENVIRONMENT VARIABLES
     load_dotenv()
     username = os.getenv('USERNAME')
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser_parse.add_argument(
         "-head", "--headless",
         action="store_false",
-        help="Run browser with a visible window (default: headless mode)."
+        help="Run browser with a visible window (default: headless mode On)."
     )
     # GUI subcommand
     parser_gui = subparsers.add_parser("gui", help="Run the GUI for managing and visualizing logs.")
