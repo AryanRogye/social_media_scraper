@@ -4,7 +4,6 @@ import threading
 import shutil
 import curses
 import os
-
 def detect_colors():
     try:
         curses.setupterm()

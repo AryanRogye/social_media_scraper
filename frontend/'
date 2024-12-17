@@ -1,0 +1,14 @@
+import React, { useState } from 'react';
+import "./App.css";
+
+function App() {
+    const [selectedFile, setSelectedFile] = useState(null)
+    return (
+        <div className='container'>
+            <h1>Welcome Select File Here</h1>
+            <input/>
+        </div>
+    );
+}
+
+export default App;

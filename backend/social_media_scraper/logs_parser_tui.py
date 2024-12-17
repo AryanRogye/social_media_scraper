@@ -10,7 +10,7 @@ def logsT(stdscr):
     curses.curs_set(0)
 
     # Path to the logs folder
-    logs_folder = "./logs"
+    logs_folder = "./backend/logs"
 
     # Get the list of folders inside the logs directory
     folders = [f for f in os.listdir(logs_folder) if os.path.isdir(os.path.join(logs_folder, f))]

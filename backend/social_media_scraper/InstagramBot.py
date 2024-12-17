@@ -6,11 +6,11 @@ from selenium.webdriver.support.ui import WebDriverWait  # For explicit waits
 from selenium.webdriver.support import expected_conditions as EC  # For conditions in waits
 import time  # For basic sleep delays
 from selenium.webdriver.chrome.options import Options
-from social_media_scraper.colors import ColorText
+from backend.social_media_scraper.colors import ColorText
 import threading
 import os
 
-from social_media_scraper.randomizer import Randomizer
+from backend.social_media_scraper.randomizer import Randomizer
 
 # from fastapi import FastAPI from fastapi.websockets import WebSocket
 # import asyncio
@@ -304,11 +304,11 @@ class InstagramBot:
         # Write the unique users to a file
 
         # Create a folder named after the user_to_scan
-        folder_name = f"logs/{self.user_to_scan}"
+        folder_name = f"backend/logs/{self.user_to_scan}"
 
         os.makedirs(folder_name, exist_ok=True)  # Creates the folder if it doesn't exist, no error if it does.
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_file = f"{folder_name}/{self.user_to_scan}_{timestamp}.log" 
         with open(log_file, "w") as f:
             for user in unique_users:
