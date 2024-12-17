@@ -53,8 +53,6 @@ if __name__ == '__main__':
     username = args.username
     if args.command == "parse":
         if not args.username:
-            print("No username provided. Please specify --username or choose a saved username.")
-            # Add logic to pick a username from logs or exit
             username = curses.wrapper(logsT)
         run_bot(username, args.headless, args.retries)
     elif args.command == "gui":
