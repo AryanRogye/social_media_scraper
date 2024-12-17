@@ -4,6 +4,7 @@ from dotenv import load_dotenv # For loading environment variables
 from social_media_scraper.InstagramBot import InstagramBot
 from social_media_scraper.colors import ColorText
 import argparse
+from social_media_scraper.db import db
 from social_media_scraper.logs_parser_tui import logsT
 
 def run_gui(file):
@@ -24,6 +25,8 @@ def run_bot(user_to_scan, headless, retries):
     bot.start()
 
 if __name__ == '__main__':
+    d = db()
+    exit(1)
     parser = argparse.ArgumentParser(description="Instagram Bot.")
     # Define subcommands
     subparsers = parser.add_subparsers(dest="command", required=True, help="Choose a mode to run: parse or gui")

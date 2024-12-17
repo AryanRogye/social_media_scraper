@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -rf ./social_media_scraper/libc/*
