@@ -1,13 +1,21 @@
 import curses
 import os
-from dotenv import load_dotenv # For loading environment variables
+from dotenv import load_dotenv
+from undetected_chromedriver import subprocess # For loading environment variables
 from backend.social_media_scraper.InstagramBot import InstagramBot
 from backend.social_media_scraper.colors import ColorText
 import argparse
 from backend.social_media_scraper.db import db
 from backend.social_media_scraper.logs_parser_tui import logsT
 
-def run_gui(file):
+def run_gui():
+    frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
+    ColorText().coolerLoading(10)
+    ColorText().printColored("Lauching GUI", color="green")
+    try:
+        subprocess.run(["npm", "run", "tauri", "dev"], cwd=frontend_dir, check=True)
+    except subprocess.CalledProcessError as e:
+        ColorText().printColored(f"Error Loading GUI: {e}", color="red")
     print("GUIIIII")
     pass
 def run_bot(user_to_scan, headless, retries):
@@ -47,14 +55,16 @@ if __name__ == '__main__':
         action="store_false",
         help="Run browser with a visible window (default: headless mode On)."
     )
+
+    parser_gui = subparsers.add_parser("gui", help="Lauch The GUI")
     
     # Parse arguments
     args = parser.parse_args()
-    username = args.username
     if args.command == "parse":
+        username = args.username
         if not args.username:
             username = curses.wrapper(logsT)
         run_bot(username, args.headless, args.retries)
     elif args.command == "gui":
-        run_gui(args.file)
+        run_gui()
     
