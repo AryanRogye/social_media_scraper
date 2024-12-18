@@ -87,6 +87,23 @@ button:active {
   background-color: #e8e8e8;
 }
 
+.button-box {
+    display: flex;
+    justify-content: center;
+}
+.parse-file-button {
+    margin-top: 10px;
+    display: flex;
+    height: 50px;
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+    cursor: pointer;
+}
+.button-text{
+    font-size: 20px;
+}
+
 input,
 button {
   outline: none;
