@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, useState } from 'react';
+import { useState } from 'react';
 import "./App.css";
 import { invoke } from '@tauri-apps/api/core';
 import toast from 'react-hot-toast';
@@ -6,12 +6,24 @@ import toast from 'react-hot-toast';
 function App() {
     const [selectedFile, setSelectedFile] = useState< String | undefined >("")
     const [fullFilePath, setFullFilePath] = useState< String | undefined >("")
+    const [limit, setLimit] = useState<any>("10");
 
     const parseFile = async() => {
+        if (!fullFilePath) {
+            toast.error("File Path Not Set") 
+        }
         try {
-            await invoke("parse_file", {file: fullFilePath})
-        } catch (error) {
-
+            // Convert the string to a integer
+            // First Check if instance is a String
+            let strLimit
+            if (limit instanceof String) {
+                strLimit = Number(limit)
+            } else {
+                strLimit = 10
+            }
+            await invoke("parse_file", {file: fullFilePath, limit: strLimit})
+        } catch (error : any) {
+            toast.error("Error Parsing File\n" + error.message)
         }
     }
     const handleClicked = async () => {
@@ -25,8 +37,8 @@ function App() {
             }
             setFullFilePath(response)
             setSelectedFile(formatted_response[formatted_response.length-1])
-        } catch (error) {
-
+        } catch (error : any) {
+            toast.error("Problem Getting File\n" + error.message)
         }
     }
 
@@ -55,6 +67,13 @@ function App() {
                     }}>
                         <p className='button-text'>Parse File?</p>
                     </button>
+                    <input
+                        type='text'
+                        placeholder='10'
+                        onChange={(value) => {
+                            setLimit(value)
+                        }}  
+                    />
                 </div>
             </div>
         </div>

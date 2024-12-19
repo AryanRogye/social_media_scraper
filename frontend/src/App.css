@@ -90,6 +90,7 @@ button:active {
 .button-box {
     display: flex;
     justify-content: center;
+    flex-direction: row;
 }
 .parse-file-button {
     margin-top: 10px;

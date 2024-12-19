@@ -18,11 +18,11 @@
             }
         ],
         "security": {
-            "csp": "default-src 'self'; script-src 'self'; style-src 'self';"
+            "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
         }
     },
     "bundle": {
-        "active": true,
+        "active": false,
         "targets": "all",
         "icon": [
             "icons/32x32.png",

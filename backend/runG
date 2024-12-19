@@ -1,0 +1,23 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/../frontend" || exit 1
+
+echo "Launching Tauri GUI..."
+
+# Path to the Tauri binary and a reference file for build checking
+BINARY_PATH="src-tauri/target/release/instagram_account_tabs"
+SOURCE_DIR="src-tauri/src"
+BUILD_MARKER="src-tauri/target/release/.last_build_time"
+
+# Check if we need to rebuild
+if [ ! -f "$BINARY_PATH" ] || [ ! -f "$BUILD_MARKER" ] || find "$SOURCE_DIR" -newer "$BUILD_MARKER" | grep -q .; then
+    echo "Changes detected. Running ./build..."
+    ./build
+    touch "$BUILD_MARKER"
+else
+    echo "No changes detected. Skipping build."
+fi
+
+# Run the Tauri binary
+$BINARY_PATH

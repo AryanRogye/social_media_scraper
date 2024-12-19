@@ -9,15 +9,15 @@ from backend.social_media_scraper.db import db
 from backend.social_media_scraper.logs_parser_tui import logsT
 
 def run_gui():
-    frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
+    script_path = os.path.join(os.path.dirname(__file__), "./backend/runG")
     ColorText().coolerLoading(10)
-    ColorText().printColored("Lauching GUI", color="green")
+    ColorText().printColored("Launching GUI", color="green")
     try:
-        subprocess.run(["npm", "run", "tauri", "dev"], cwd=frontend_dir, check=True)
+        subprocess.run(["sh", script_path], check=True)
+        ColorText().printColored("Success Launching GUI", color="green")
+        return
     except subprocess.CalledProcessError as e:
-        ColorText().printColored(f"Error Loading GUI: {e}", color="red")
-    print("GUIIIII")
-    pass
+        ColorText().printColored(f"Error Launching GUI: {e}", color="red")
 def run_bot(user_to_scan, headless, retries):
     # Print The Values For The User
     ColorText().printColored(f"Checking {user_to_scan} Insta Account", color="cyan", underline=True)

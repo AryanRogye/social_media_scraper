@@ -1,48 +1,67 @@
-use std::fmt::format;
-use std::io::BufRead;
+mod parser;
+use parser::User;
+use std::{
+    error::Error, 
+    env, 
+    process::Stdio
+};
+use serde_json::to_string;
+use tokio::process::Command;
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+
+async fn call_sel_py(users: Vec<User>) -> Result<(), Box<dyn Error>> {
+    let users_json_str : String = to_string(&users).expect("Couldnt Parse Vector");
+
+    // Current Working Directory
+    let curr_dir = std::env::current_dir().expect("Failed to get the current dir");
+    let script_path = curr_dir.join("src-tauri/sel_py");
+
+    // Spawn the subprocess asynchronously
+    println!("Executing {:?}", script_path);
+    let mut child = Command::new("sh")
+        .arg(script_path)
+        .arg(users_json_str)
+        .stdout(Stdio::inherit()) // Inherit stdout for live output
+        .stderr(Stdio::inherit()) // Inherit stderr for live error messages
+        .spawn()?;
+
+    tokio::spawn(async move {
+        if let Some(status) = child.wait().await.ok() {
+            if status.success() {
+                println!("Everything ran successfully");
+            } else {
+                eprintln!("Subprocess failed with status: {}", status);
+            }
+        }
+    });
+    // Immediately return to allow the frontend to continue
+    Ok(())
 }
 
-fn handle_txt(file: &str) -> Result<String, Box<dyn std::error::Error>> {
-    println!("CALLED");
-    // Read The Txt and
-    use std::fs::File;
-    use std::io::{self,BufRead};
-    let f = File::open(file)?;
-    let reader = io::BufReader::new(f);
-    // Limit to opening 10 right now
-    let mut count = 0;
-    for line in reader.lines() {
-        if count == 9 {
-            break;
-        }
-        let line = line?;
-        println!("{}", line);
-        if let Err(e) = open::that(line) {
-            eprintln!("There was a problem opening the file: {}", e);
-        }
-        count = count + 1;
-    }
+
+async fn handle_txt(file: &str, limit: usize) -> Result<String, Box<dyn std::error::Error>> {
+    let users = User::new(file, limit)?;
+    call_sel_py(users).await.expect("Couldnt Execute User");
     Ok(String::from("Success"))
 }
 #[tauri::command]
-fn parse_file(file: &str) -> String{
+async fn parse_file(file: &str, limit: usize) -> Result<String, String> {
     // Check the extension first
-    if file.ends_with(".txt") || file.ends_with(".log") {
-        println!("Is A Txt Parsing Started");
-        match handle_txt(file){
-            Ok(..) => {},
-            Err(e) => println!("There was an Error {}", e)
+    println!("Got Limit -- {}", limit);
+    if file.ends_with(".json") {
+        println!("Parsing Started");
+        match handle_txt(file, limit).await {
+            Ok(..) => Ok(String::from("Success")),
+            Err(e) => {
+                println!("There was an Error: {}", e);
+                Err(format!("Error: {}", e))
+            }
         }
     } else {
-        return "Cant Parse This File Yet".to_string()
+        Err("File type cannot be parsed yet. Sorry :(".to_string())
     }
-    return "Parsing Done".to_string()
 }
+
 #[tauri::command]
 fn open_finder() -> String {
     use rfd::FileDialog;
@@ -53,7 +72,7 @@ fn open_finder() -> String {
     {
         return format!("{}", files.to_string_lossy())
     } else {
-        return format!("None")
+        return "None".to_string()
     }
 }
 
@@ -61,7 +80,7 @@ fn open_finder() -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, open_finder, parse_file])
+        .invoke_handler(tauri::generate_handler![open_finder, parse_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

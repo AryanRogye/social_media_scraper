@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# NEED TO MAKE SURE THAT ENVIRONMENT IS STARTED
+echo "Called"
+cd src-tauri || exit
+source venv/bin/activate
+PYTHONPATH=. ./venv/bin/python3 src/tab-management.py "$1"
