@@ -22,8 +22,8 @@ def logsT(stdscr):
     current_selection = 0
 
     # Get terminal dimensions
-    max_y, max_x = stdscr.getmaxyx()
-    y, x = stdscr.getyx()
+    max_y, _ = stdscr.getmaxyx()
+    y, _ = stdscr.getyx()
 
     # Calculate the starting position for the header
     header_y = max(0, y - 1)  # Ensure it doesn't go negative

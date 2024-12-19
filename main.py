@@ -5,7 +5,6 @@ from undetected_chromedriver import subprocess # For loading environment variabl
 from backend.social_media_scraper.InstagramBot import InstagramBot
 from backend.social_media_scraper.colors import ColorText
 import argparse
-from backend.social_media_scraper.db import db
 from backend.social_media_scraper.logs_parser_tui import logsT
 
 def run_gui():

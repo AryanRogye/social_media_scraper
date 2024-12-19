@@ -1,4 +1,3 @@
-from datetime import datetime
 from selenium.webdriver import ActionChains
 import undetected_chromedriver as uc  # For bypassing bot detection
 from selenium.webdriver.common.by import By  # For locating elements
@@ -214,7 +213,7 @@ class InstagramBot:
                     if self.driver == None:
                         return
                     with self.driver_lock:
-                        for i in range(maxTries):
+                        for _ in range(maxTries):
                             self.driver.execute_script("window.scrollBy(0, 500)")  # Scroll 1000 pixels
                             # Wait for the container to load
                             WebDriverWait(self.driver, 10).until(
