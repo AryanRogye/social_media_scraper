@@ -46,6 +46,18 @@
   display: flex;
   justify-content: center;
 }
+.users-box {
+    display: flex;
+    justify-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.user-list {
+    list-style: none;
+    margin-right: 10px;
+}
+.user-inner-list {
+}
 
 a {
   font-weight: 500;

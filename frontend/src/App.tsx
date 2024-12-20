@@ -6,23 +6,63 @@ import toast from 'react-hot-toast';
 function App() {
     const [selectedFile, setSelectedFile] = useState< String | undefined >("")
     const [fullFilePath, setFullFilePath] = useState< String | undefined >("")
-    const [limit, setLimit] = useState<any>("10");
+
+    const limit : number = 10
+    // Should be an array of Instagram Accounts
+    const [InstagramAccount, setInstagramAccount] = useState<String[]>([]);
+    const [fullPathInstagramAccount, setFullPathInstagramAccount] = useState<any>();
+    
+    const openWindows = async () => {
+        if (!fullPathInstagramAccount || fullPathInstagramAccount.length === 0) {
+            toast.error("No data available to send");
+            return;
+        }
+        try {
+            // Send the JSON data to the backend
+            const response: String = await invoke("open_sel", {
+                jsonData: JSON.stringify(fullPathInstagramAccount), // Serialize the data
+                file: fullFilePath,
+            });
+            if (response) {
+                toast.success("Success: Data sent to backend!");
+                console.log("Backend Response:", response);
+            }
+        } catch (error: any) {
+            console.error("Error Sending Data:", error);
+            toast.error("Something Went Wrong", error);
+        }
+    };
 
     const parseFile = async() => {
         if (!fullFilePath) {
-            toast.error("File Path Not Set") 
+            toast.error("File Path Not Set")
         }
         try {
             // Convert the string to a integer
             // First Check if instance is a String
-            let strLimit
-            if (limit instanceof String) {
-                strLimit = Number(limit)
-            } else {
-                strLimit = 10
+            let response : string = await invoke("parse_file", {file: fullFilePath, limit: limit})
+            if (response) {
+                const users = JSON.parse(response);
+                setFullPathInstagramAccount(users)
+                
+                let accounts = users
+                    .map((user: {"Instagram Account" : string}) => user["Instagram Account"])
+                    .join(", ")
+
+                // Split by comma and clean up the usernames
+                const splitAccounts = accounts.split(", ").map((link: string) =>
+                    link.replace("https://www.instagram.com/", "").replace("/", "")
+                );
+
+                // Store the cleaned usernames in `InstagramAccount`
+                setInstagramAccount(splitAccounts);
+
+                console.log("Full Paths:", accounts);
+                console.log("Usernames:", splitAccounts);
+
+                setInstagramAccount(splitAccounts)
             }
-            await invoke("parse_file", {file: fullFilePath, limit: strLimit})
-        } catch (error : any) {
+        } catch (error: any) {
             toast.error("Error Parsing File\n" + error.message)
         }
     }
@@ -65,15 +105,21 @@ function App() {
                     <button className='parse-file-button' onClick={() => {
                         parseFile();
                     }}>
-                        <p className='button-text'>Parse File?</p>
+                        <p className='button-text'>Parse File</p>
                     </button>
-                    <input
-                        type='text'
-                        placeholder='10'
-                        onChange={(value) => {
-                            setLimit(value)
-                        }}  
-                    />
+                    <button className='parse-file-button' onClick={() => {
+                        openWindows();
+                    }}>
+                        <p className='button-text'>Open Messages</p>
+                    </button>
+                </div>
+                <div className='users-box'>
+                    {fullPathInstagramAccount && <p>Users</p>}
+                    <ul className='user-list'>
+                        {InstagramAccount.map((account, index) => (
+                            <li key={index}>{account}</li>
+                        ))}
+                    </ul>
                 </div>
             </div>
         </div>

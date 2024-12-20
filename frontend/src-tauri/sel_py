@@ -4,4 +4,4 @@
 echo "Called"
 cd src-tauri || exit
 source venv/bin/activate
-PYTHONPATH=. ./venv/bin/python3 src/tab-management.py "$1"
+PYTHONPATH=. ./venv/bin/python3 src/tab-management.py "$1" "$2"

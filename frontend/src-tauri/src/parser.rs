@@ -18,6 +18,7 @@ impl User {
         let new_user : Vec<User> = User::get_json_file(file, limit)?;
         Ok(new_user)
     }
+
     pub fn get_json_file(file : &str, limit : usize) -> Result<Vec<User>, Box<dyn Error>> {
         // So Basically We Need to parse the Json and only make sure we send back 10 unchecked
         let mut file = File::open(file)?;
