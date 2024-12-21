@@ -1,5 +1,5 @@
 venv/
-./env
+./.env
 backend/logs/*
 __pycache__/
 ./social_media_scraper/__pycache__
