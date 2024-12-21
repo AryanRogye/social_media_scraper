@@ -9,11 +9,10 @@ use tokio::process::Command;
 
 
 async fn call_sel_py(users_json_str: String, file: &str) -> Result<(), Box<dyn Error>> {
-    // Current Working Directory
     let curr_dir = std::env::current_dir().expect("Failed to get the current dir");
     let script_path = curr_dir.join("src-tauri/sel_py");
     println!("Got File -- {}", file);
-    // Spawn the subprocess asynchronously
+
     println!("Executing {:?}", script_path);
     let mut child = Command::new("sh")
         .arg(script_path)
@@ -21,24 +20,23 @@ async fn call_sel_py(users_json_str: String, file: &str) -> Result<(), Box<dyn E
         .arg(file)
         .spawn()?;
 
+    // Wait for the child process to complete in a separate async task
     tokio::spawn(async move {
-        if let Some(status) = child.wait().await.ok() {
-            if status.success() {
+        match child.wait().await {
+            Ok(status) if status.success() => {
                 println!("Everything ran successfully");
-            } else {
+            }
+            Ok(status) => {
                 eprintln!("Subprocess failed with status: {}", status);
+            }
+            Err(e) => {
+                eprintln!("Failed to wait on subprocess: {}", e);
             }
         }
     });
+
     // Immediately return to allow the frontend to continue
     Ok(())
-}
-
-
-async fn handle_txt(file: &str, limit: usize) -> Result<String, Box<dyn std::error::Error>> {
-    let users = User::new(file, limit)?;
-    //call_sel_py(users).await.expect("Couldnt Execute User");
-    Ok(to_string(&users)?)
 }
 
 #[tauri::command]
@@ -48,6 +46,12 @@ async fn open_sel(json_data: String, file: &str) -> Result<String, String> {
         Ok(_) => Ok("Opened".to_string()),
         Err(e) => Err(e.to_string())
     }
+}
+
+async fn handle_txt(file: &str, limit: usize) -> Result<String, Box<dyn std::error::Error>> {
+    let users = User::new(file, limit)?;
+    //call_sel_py(users).await.expect("Couldnt Execute User");
+    Ok(to_string(&users)?)
 }
 
 #[tauri::command]

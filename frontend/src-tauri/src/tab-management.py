@@ -6,7 +6,27 @@ import time
 import sys
 import json
 
-def open_instagram_accounts(users):
+# Function to save updates to the JSON file
+def update_json_file(file_path, data):
+    with open(file_path, 'w') as f:
+        json.dump(data, f, indent=4)
+
+# Function to update the 'Checked' status in the JSON file
+def mark_as_checked(file_path, instagram_url):
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+
+    # Update the 'Checked' field for the matching Instagram URL
+    for user in data:
+        if user.get("Instagram Account") == instagram_url:
+            user["Checked"] = True
+            break
+
+    # Write the updated data back to the file
+    update_json_file(file_path, data)
+
+# Function to open Instagram accounts
+def open_instagram_accounts(users, file_path):
     # Configure undetected_chromedriver options
     options = uc.ChromeOptions()
     options.add_argument("--disable-blink-features=AutomationControlled")  # Bypass bot detection
@@ -19,6 +39,8 @@ def open_instagram_accounts(users):
     options.add_argument("--disable-dev-shm-usage")
 
     driver = uc.Chrome(options=options)
+    print("Options Loading")
+
     try:
         driver.set_window_size(800, 600)
         screen_width = driver.execute_script("return window.screen.availWidth;")
@@ -49,6 +71,9 @@ def open_instagram_accounts(users):
                 driver.get(instagram_url)
 
             print(f"Opened Instagram Account: {instagram_url}")
+            
+            # Mark the account as checked in the file
+            mark_as_checked(file_path, instagram_url)
 
         print("All Instagram accounts opened in separate tabs. Press Ctrl+C to close.")
         while True:
@@ -61,6 +86,5 @@ def open_instagram_accounts(users):
 if __name__ == "__main__":
     users_json = sys.argv[1]
     file_edit = sys.argv[2]
-    print(f"TO EDIT {file_edit}")
     users = json.loads(users_json)
-    open_instagram_accounts(users)
+    open_instagram_accounts(users, file_edit)
