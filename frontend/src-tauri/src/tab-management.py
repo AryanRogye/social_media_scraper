@@ -86,5 +86,8 @@ def open_instagram_accounts(users, file_path):
 if __name__ == "__main__":
     users_json = sys.argv[1]
     file_edit = sys.argv[2]
+    if not users_json or not file_edit:
+        print("Args Invalid")
+        exit(1)
     users = json.loads(users_json)
     open_instagram_accounts(users, file_edit)
