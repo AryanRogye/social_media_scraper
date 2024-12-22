@@ -21,19 +21,24 @@ venv\Scripts\activate`
 ### Install Dependencies
 ```bash
 pip install -r requirements.txt
+deactivate
 ```
+
+### For frontend
 ```bash
 cd frontend
 npm install
-deactivate
 cd src-tauri
 python3 -m venv venv
 source venv/bin/activate # Whatever Your OS is
-
 pip install -r requirements.txt
 deactivate
+```
+
+### Go Back
+```bash
 cd ..
 cd ..
-./runp # Parser
+./runp # Parser enter -u with username in "" for first time after itll look at your logs for repeats
 ./rung # Gui
 ```
