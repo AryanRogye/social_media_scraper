@@ -23,7 +23,7 @@ from backend.social_media_scraper.randomizer import Randomizer
 # Next will be sum of amount
 
 class InstagramBot:
-    def __init__(self, username, password, user_to_scan, headless, max_retries=3):
+    def __init__(self, username, password, user_to_scan, headless, chromedriver_binary, max_retries=3):
         self.ct = ColorText()
         self.username = username
         self.password = password
@@ -32,6 +32,7 @@ class InstagramBot:
         self.headless = headless
         self.max_retries = max_retries
         self.driver = None
+        self.chromedriver_binary = chromedriver_binary
 
         self.driver_lock = threading.Lock()
 
@@ -56,7 +57,7 @@ class InstagramBot:
     def initDriver(self):
         # Options
         options = Options()
-        options.add_argument("--user-data-dir=/Users/aryanrogye/Library/Application Support/Google/Chrome/Profile 1")
+        options.add_argument(f"--user-data-dir={self.chromedriver_binary}")
         options.add_argument("--profile-directory=Default")  # Use the default profile
     
         # Google Chrome Binary File

@@ -17,18 +17,25 @@ def run_gui():
         return
     except subprocess.CalledProcessError as e:
         ColorText().printColored(f"Error Launching GUI: {e}", color="red")
-def run_bot(user_to_scan, headless, retries):
+def run_bot(user_to_scan, headless, max_retries):
     # Print The Values For The User
     ColorText().printColored(f"Checking {user_to_scan} Insta Account", color="cyan", underline=True)
-    ColorText().coolerLoading(10)
-    ColorText().printColored(f"Retries Set To: |{retries}|", color="green", underline=True)
-    ColorText().coolerLoading(10)
+    ColorText().printColored(f"Retries Set To: |{max_retries}|", color="green", underline=True)
     ColorText().printColored(f"Headless Set To:  |{headless}|", color="green", underline=True)
     # GET FROM ENVIRONMENT VARIABLES
     load_dotenv()
     username = os.getenv('USERNAME')
     password = os.getenv('PASSWORD')
-    bot = InstagramBot(username, password, user_to_scan, headless, retries)
+    chromedriver_binary = os.getenv("CHROME_PROFILE_LOCATION")
+
+    bot = InstagramBot(
+        username=username, 
+        password=password, 
+        user_to_scan=user_to_scan, 
+        headless=headless,
+        chromedriver_binary=chromedriver_binary, 
+        max_retries=max_retries
+    )
     bot.start()
 
 if __name__ == '__main__':
