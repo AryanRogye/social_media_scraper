@@ -28,6 +28,10 @@ def run_bot(user_to_scan, headless, max_retries):
     password = os.getenv('PASSWORD')
     chromedriver_binary = os.getenv("CHROME_PROFILE_LOCATION")
 
+    if not username or not password or not chromedriver_binary:
+        ColorText().printColored(".env not set up right", color="red")
+        exit(1)
+
     bot = InstagramBot(
         username=username, 
         password=password, 
