@@ -1,30 +1,43 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Exit if any command fails (simulate "set -e" behavior)
-call :check_error
-
 :: Check if Python is installed
 python --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo Python3 not found. Installing...
-    powershell -Command "Start-Process -Verb RunAs -FilePath 'cmd.exe' -ArgumentList '/c winget install Python.Python.3'"
-    exit /b 1
+    echo Python not found. Downloading and installing...
+    :: Download Python installer
+    curl -o python-installer.exe https://www.python.org/ftp/python/3.11.6/python-3.11.6-amd64.exe
+
+    :: Install Python silently (Prepend path, install for all users)
+    start /wait python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
+
+    :: Cleanup installer
+    del python-installer.exe
+
+    echo Python installed successfully.
 )
 
 :: Check if npm is installed
 npm --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo npm not found. Installing...
-    powershell -Command "Start-Process -Verb RunAs -FilePath 'cmd.exe' -ArgumentList '/c winget install OpenJS.NodeJS'"
-    exit /b 1
+    echo npm not found. Downloading and installing...
+
+    :: Download and install Node.js
+    curl -o node-installer.msi https://nodejs.org/dist/v20.8.1/node-v20.8.1-x64.msi
+    start /wait msiexec /i node-installer.msi /quiet /norestart
+    del node-installer.msi
+
+    echo npm installed successfully.
 )
 
 :: Check if Cargo (Rust) is installed
 cargo --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo Cargo not found. Installing...
-    powershell -Command "Invoke-WebRequest -Uri 'https://sh.rustup.rs' -OutFile 'rustup-init.exe' && .\rustup-init.exe -y"
+    echo Cargo not found. Downloading and installing...
+
+    :: Download and install Rust
+    curl -o rustup-init.exe https://sh.rustup.rs
+    start /wait rustup-init.exe -y
     del rustup-init.exe
 )
 
@@ -48,13 +61,6 @@ call venv\Scripts\deactivate
 cd ..
 cd ..
 
-echo Script completed successfully.
+echo Setup completed successfully.
 pause
 exit /b 0
-
-:: Function to check for errors and exit if necessary
-:check_error
-if %ERRORLEVEL% neq 0 (
-    echo An error occurred. Exiting script.
-    exit /b 1
-)
