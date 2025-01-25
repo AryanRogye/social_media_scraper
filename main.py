@@ -18,7 +18,7 @@ def run_gui():
         return
     except subprocess.CalledProcessError as e:
         ColorText().printColored(f"Error Launching GUI: {e}", color="red")
-def run_bot(user_to_scan, headless, max_retries, id_array):
+def run_bot(user_to_scan, headless, max_retries, id_array, id_likes, id_comments):
     # Print The Values For The User
     ColorText().printSeparator();
     ColorText().printColored(f"Insta Account:  \t{user_to_scan}", color="blue_4")
@@ -27,13 +27,35 @@ def run_bot(user_to_scan, headless, max_retries, id_array):
     ColorText().printSeparator();
     
     # Get Length of the id_array
-    arr_len = len(id_array)
-    for i in range(arr_len):
-        if i == arr_len // 2:
-            ColorText().printColored(f"Avoiding: \t{id_array[i]}\t | Total: {arr_len}", color="yellow")
-            continue
-        ColorText().printColored(f"Avoiding: \t{id_array[i]}\t |", color="yellow")
-    ColorText().printSeparator();
+    if id_array:
+        arr_len = len(id_array)
+        for i in range(arr_len):
+            if i == arr_len // 2:
+                ColorText().printColored(f"Avoiding: \t{id_array[i]}\t | Total: {arr_len}", color="yellow")
+                continue
+            ColorText().printColored(f"Avoiding: \t{id_array[i]}\t |", color="yellow")
+        ColorText().printSeparator();
+
+    # Get Length of the id_likes
+    if id_likes:
+        arr_len = len(id_likes)
+        for i in range(arr_len):
+            if i == arr_len // 2:
+                ColorText().printColored(f"Liking: \t{id_likes[i]}\t | Total: {arr_len}", color="yellow")
+                continue
+            ColorText().printColored(f"Liking: \t{id_likes[i]}\t |", color="yellow")
+        ColorText().printSeparator();
+
+    # Get Length of the id_comments
+    if id_comments:
+        arr_len = len(id_comments)
+        for i in range(arr_len):
+            if i == arr_len // 2:
+                ColorText().printColored(f"Commenting: \t{id_comments[i]}\t | Total: {arr_len}", color="yellow")
+                continue
+            ColorText().printColored(f"Commenting: \t{id_comments[i]}\t |", color="yellow")
+        ColorText().printSeparator();
+
 
     # GET FROM ENVIRONMENT VARIABLES
     load_dotenv()
@@ -63,8 +85,38 @@ def run_bot(user_to_scan, headless, max_retries, id_array):
         headless=headless,
         chromedriver_binary=chromedriver_binary, 
         id_array=id_array,
+        id_likes=id_likes,
+        id_comments=id_comments,
         max_retries=max_retries
     )
+
+    # Another confirmation if avoids are set
+    if bot.id_array or bot.id_likes or bot.id_comments:
+        if bot.id_array:
+            ColorText().printSeparator();
+            ColorText().printColored("Final ID List", color="yellow")
+            for i in bot.id_array:
+                ColorText().printColored(f"Avoiding: {i}", color="yellow")
+            ColorText().printSeparator();
+        if bot.id_likes:
+            ColorText().printSeparator();
+            ColorText().printColored("Final ID Likes", color="yellow")
+            for i in bot.id_likes:
+                ColorText().printColored(f"Liking: {i}", color="yellow")
+            ColorText().printSeparator();
+        if bot.id_comments:
+            ColorText().printSeparator();
+            ColorText().printColored("Final ID Comments", color="yellow")
+            for i in bot.id_comments:
+                ColorText().printColored(f"Commenting: {i}", color="yellow")
+            ColorText().printSeparator();
+
+        ColorText().printColored("Do You Want To Continue? (y/n)", color="yellow")
+        user_input = input()
+        if user_input.lower() != "y":
+            ColorText().printColored("Exiting...", color="red")
+            exit(1)
+
     bot.start()
 
 if __name__ == '__main__':
@@ -106,6 +158,7 @@ if __name__ == '__main__':
         help="""Enter the id of the reel/post link you want to like.
         WARNING: This will not parse the comments.
         this overrides the avoid list and only likes the post you specify.
+        Example link: https://www.instagram.com/dfw.gsxr/reel/DFN41gDPRNF/
         Example ./runp.sh -u "" -a DFN41gDPRNF -l DFN41gDPRNF.
         this will only parse the likes of the post and not the comments.
         """
@@ -116,6 +169,7 @@ if __name__ == '__main__':
         help="""Enter the id of the reel/post link you want to comment.
         WARNING: This will not parse the likes.
         this overrides the avoid list and only comments the post you specify.
+        Example link: https://www.instagram.com/dfw.gsxr/reel/DFN41gDPRNF/
         Example ./runp.sh -u "" -a DFN41gDPRNF -c DFN41gDPRNF.
         this will only parse the comments of the post and not the likes.
         """
@@ -126,19 +180,24 @@ if __name__ == '__main__':
     
     # Parse Arguments
     if args.command == "parse":
-        id_array = []
+
+        id_array    = []
+        id_likes    = []
+        id_comments = []
+
         if args.avoid:
-            id_array = [id.strip() for id in args.avoid.split(",") if id.strip()]
-        id_array = set(id_array)    # Remove duplicates
-        id_array = list(id_array)
+            id_array = list(set([id.strip() for id in args.avoid.split(",") if id.strip()]))
+        if args.likes:
+            id_likes = list(set([id.strip() for id in args.likes.split(",") if id.strip()]))
+        if args.comments:
+            id_comments = list(set([id.strip() for id in args.comments.split(",") if id.strip()]))
 
         username = args.username
         if not args.username:
             # This will get the username from the TUI
             username = curses.wrapper(logsT)
-
         # Run bot
-        run_bot(username, args.headless, args.retries, id_array)
+        run_bot(username, args.headless, args.retries, id_array, id_likes, id_comments)
     # Run GUI
     elif args.command == "gui":
         run_gui()

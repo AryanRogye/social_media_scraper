@@ -23,24 +23,32 @@ from backend.social_media_scraper.randomizer import Randomizer
 # Next will be sum of amount
 
 class InstagramBot:
-    def __init__(self, username, password, user_to_scan, headless, chromedriver_binary, id_array, max_retries=3):
+    def __init__(self, username, password, user_to_scan, headless, chromedriver_binary, id_array, id_likes, id_comments,max_retries=3):
         self.ct = ColorText()
         self.username = username
         self.password = password
         self.user_to_scan = user_to_scan
         self.base_url = 'https://www.instagram.com/'
         self.id_array = id_array
+        self.id_likes = id_likes
+        self.id_comments = id_comments
         self.headless = headless
         self.max_retries = max_retries
         self.driver = None
         self.chromedriver_binary = chromedriver_binary
-
         self.driver_lock = threading.Lock()
 
         driverThread = threading.Thread(target=self.initDriverWrapper)
         loadingThread = self.ct.getThreadForLoading(15)
         self.ct.loadingWhileScripting(driverThread, loadingThread)
+        self.manageLikesAndCommentsIDArrays()
     
+    # So Basically if an item in id_likes or id_comments is in 
+    # id_array we want to remove it from the list
+    def manageLikesAndCommentsIDArrays(self):
+        # Remove items from id_array if they exist in id_likes or id_comments
+        self.id_array = [item for item in self.id_array if item not in self.id_likes and item not in self.id_comments]
+
     # Wrapper method to initialize the Selenium driver
     def initDriverWrapper(self):
         with self.driver_lock:
@@ -293,8 +301,13 @@ class InstagramBot:
             self.ct.loadingWhileScripting(websiteThread, timeThread)
             
             self.ct.printColored(f"Parsing {reelsAndPosts[size]} comments", color="cyan")
-            users[reelsAndPosts[size]] = self.getCommentUsers(reelsAndPosts[size])
-            likedUsers[reelsAndPosts[size]] = self.getLikedUsers(reelsAndPosts[size])
+            if reelsAndPosts[size] not in self.id_comments and reelsAndPosts[size] not in self.id_likes:
+                users[reelsAndPosts[size]] = self.getCommentUsers(reelsAndPosts[size])
+                likedUsers[reelsAndPosts[size]] = self.getLikedUsers(reelsAndPosts[size])
+            elif reelsAndPosts[size] in self.id_comments:
+                users[reelsAndPosts[size]] = self.getCommentUsers(reelsAndPosts[size])
+            elif reelsAndPosts[size] in self.id_likes:
+                likedUsers[reelsAndPosts[size]] = self.getLikedUsers(reelsAndPosts[size])
             size = size - 1
 
         self.ct.printSeparator()
