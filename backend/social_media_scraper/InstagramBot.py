@@ -10,7 +10,7 @@ from undetected_chromedriver.options import json
 from backend.social_media_scraper.colors import ColorText
 import threading
 import os
-
+import re
 from backend.social_media_scraper.randomizer import Randomizer
 
 # from fastapi import FastAPI from fastapi.websockets import WebSocket
@@ -23,12 +23,13 @@ from backend.social_media_scraper.randomizer import Randomizer
 # Next will be sum of amount
 
 class InstagramBot:
-    def __init__(self, username, password, user_to_scan, headless, chromedriver_binary, max_retries=3):
+    def __init__(self, username, password, user_to_scan, headless, chromedriver_binary, id_array, max_retries=3):
         self.ct = ColorText()
         self.username = username
         self.password = password
         self.user_to_scan = user_to_scan
         self.base_url = 'https://www.instagram.com/'
+        self.id_array = id_array
         self.headless = headless
         self.max_retries = max_retries
         self.driver = None
@@ -39,17 +40,19 @@ class InstagramBot:
         driverThread = threading.Thread(target=self.initDriverWrapper)
         loadingThread = self.ct.getThreadForLoading(15)
         self.ct.loadingWhileScripting(driverThread, loadingThread)
-
+    
+    # Wrapper method to initialize the Selenium driver
     def initDriverWrapper(self):
-        """Wrapper method to initialize the Selenium driver."""
         with self.driver_lock:
             self.driver = self.initDriver()
-
+    
+    # This Function is Used to start the script
     def start(self):
         if self.driver == None:
             self.ct.printColored("Driver is None", color="red")
             return
         self.ct.printColored("Starting Script....", color="green", underline=True)
+        # Main Logic in Here
         self.startScript()
         self.driver.quit()
 
@@ -79,6 +82,38 @@ class InstagramBot:
         self.ct.printColored("\nDriver initialized!\nInitializing Other Things", color="cyan", underline=True)
         return driver
 
+    def loginWithCredentials(self):
+        def signIn():
+            with self.driver_lock:
+                if self.driver == None:
+                    return
+                try: 
+                    WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]"))
+                    )
+                    username_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]")
+                    ActionChains(self.driver).move_to_element(username_input)
+                    time.sleep(2)
+                    ActionChains(self.driver).click(username_input)
+                    username_input.send_keys(self.username)
+
+                    password_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Password')]")
+                    password_input.send_keys(self.password)
+
+                    login_button = self.driver.find_element(By.XPATH, "//*[contains(@class, 'acan _acap _acas _aj1- _ap30')]")
+                    login_button.click()
+                except Exception:
+                    self.ct.printColored("\nThis Is Good You Are Signed In Already So Nothing U need to do\nFinishing Other Things", color="cyan")
+        if self.driver == None:
+            exit(1)
+        # Retry the search functionality
+        # Create threads
+        signInThread = threading.Thread(target=signIn)
+        loadingThread = self.ct.getThreadForLoading(15)
+        self.ct.loadingWhileScripting(signInThread, loadingThread)
+        self.ct.printColored("Navigating back to the home page...", color="cyan")
+        self.driver.get(self.base_url)
+
     def startScript(self) :
         if self.driver == None:
             self.ct.printColored("Driver is None", color="red")
@@ -88,38 +123,7 @@ class InstagramBot:
                 with self.driver_lock:
                     self.driver.get(self.base_url)
                 # THIS IS FOR NOT SIGNED IN
-
-                def signIn():
-                    with self.driver_lock:
-                        if self.driver == None:
-                            return
-                        try: 
-                            WebDriverWait(self.driver, 10).until(
-                                EC.presence_of_element_located((By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]"))
-                            )
-                            username_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Phone number, username, or email')]")
-                            ActionChains(self.driver).move_to_element(username_input)
-                            time.sleep(2)
-                            ActionChains(self.driver).click(username_input)
-                            username_input.send_keys(self.username)
-
-                            password_input = self.driver.find_element(By.XPATH, "//*[contains(@aria-label, 'Password')]")
-                            password_input.send_keys(self.password)
-
-                            login_button = self.driver.find_element(By.XPATH, "//*[contains(@class, 'acan _acap _acas _aj1- _ap30')]")
-                            login_button.click()
-                        except Exception:
-                            self.ct.printColored("\nThis Is Good You Are Signed In Already So Nothing U need to do\nFinishing Other Things", color="cyan")
-
-                # Retry the search functionality
-                # Create threads
-                signInThread = threading.Thread(target=signIn)
-                loadingThread = self.ct.getThreadForLoading(15)
-                self.ct.loadingWhileScripting(signInThread, loadingThread)
-
-                self.ct.printColored("Navigating back to the home page...", color="cyan")
-                self.driver.get(self.base_url)
-
+                self.loginWithCredentials()
 
                 WebDriverWait(self.driver, 10).until(
                     EC.visibility_of_element_located((By.XPATH, "//*[contains(@aria-label, 'Search')]"))
@@ -244,6 +248,8 @@ class InstagramBot:
             self.ct.printColored("Couldnt Find Posts", color="red")
         reelsAndPosts = []
         for i in links:
+            if i in self.id_array:
+                continue
             if i[-7:] == "/reels/":
                 continue
             if ".meme" in f"{i}" or "reel" in f"{i}" or "/p/" in f"{i}":
@@ -257,6 +263,7 @@ class InstagramBot:
         size = len(reelsAndPosts) - 1
         rand = Randomizer.randomize_30sec()
         users = {}
+        likedUsers = {}
         while (size >= 0):
             self.ct.printColored("Randomizing", color="cyan")
             if rand % 2 == 0:
@@ -287,15 +294,23 @@ class InstagramBot:
             
             self.ct.printColored(f"Parsing {reelsAndPosts[size]} comments", color="cyan")
             users[reelsAndPosts[size]] = self.getCommentUsers(reelsAndPosts[size])
-
+            likedUsers[reelsAndPosts[size]] = self.getLikedUsers(reelsAndPosts[size])
             size = size - 1
 
         self.ct.printSeparator()
         self.ct.printColored("Done Getting Users - ", color="green") 
         self.ct.printSeparator()
 
+        self.createJsonIdentifiers(users, likedUsers)
+
         unique_users = set()
         for key, user_list in users.items():
+            self.ct.printColored(f"Getting Uniqe Values From {key}", color="cyan")
+            time.sleep(1)
+            for user in user_list:
+                unique_users.add(user)
+
+        for key, user_list in likedUsers.items():
             self.ct.printColored(f"Getting Uniqe Values From {key}", color="cyan")
             time.sleep(1)
             for user in user_list:
@@ -311,7 +326,23 @@ class InstagramBot:
         # Create a folder named after the user_to_scan
         self.handleJsonCreation(unique_users);
         # THIS IS THE END FOR NOW
+    
+    def createJsonIdentifiers(self, users, likedUsers):
+        folder_name = f"backend/logs/identifiers/{self.user_to_scan}"
+        file_name = f"{self.user_to_scan}.json"
+        file_path = os.path.join(folder_name, file_name)
+        os.makedirs(folder_name, exist_ok=True)
+        data = {
+            "comments": users,
+            "liked": likedUsers
+        }
+        try:
+            with open(file_path, "w", encoding="utf-8") as json_file:
+                json.dump(data, json_file, indent=4, ensure_ascii=False)
 
+            print(f"Data successfully written to {file_path}")
+        except Exception as e:
+            print(f"Error writing JSON file: {e}")
     def handleJsonCreation(self, unique_users):
         folder_name = f"backend/logs/{self.user_to_scan}"
         os.makedirs(folder_name, exist_ok=True)
@@ -346,7 +377,52 @@ class InstagramBot:
             self.ct.printColored(f"Users have been logged to {log_file}", color="green")
         except Exception as e:
             print(f"Failed to write JSON data: {e}")
+    
+    def getLikedUsers(self, website, rand=1):
 
+        base = "https://www.instagram.com/p/"
+        match = re.search(r'/([^/]+)/?$', website)
+        new_url = ""
+        
+        if match:
+            new_url = base + match.group(1) + "/liked_by/"
+        else:
+            self.ct.printColored("There was an error getting the liked users", color="red")
+            return
+        # First Go to the website
+        if self.driver == None:
+            return
+        print("Original URL -- ", website)
+        print("Going to the new url -- ", new_url)
+        self.driver.get(new_url)
+        userPath = "//*[contains(@class, '_ap3a _aaco _aacw _aacx _aad7 _aade')]"
+        users = []
+        def getNames():
+            with self.driver_lock:
+                if self.driver == None:
+                    return
+                try:
+                    WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, userPath))
+                    )
+                    userNames = self.driver.find_elements(By.XPATH, userPath)
+                    for user in userNames:
+                        users.append(user.text)
+                except Exception:
+                    self.ct.printColored(f"There was a problem getting the users from the likes of the post - {website}", color="red")
+
+        namesThread = threading.Thread(target=getNames)
+        randDelay = f"0.{rand}"
+        delay = float(randDelay)
+        if delay == 0.0:
+            delay = 0.1
+        namesThreadLoading = self.ct.getThreadForLoading(10, delay=delay)
+        self.ct.loadingWhileScripting(namesThread, namesThreadLoading)
+        self.ct.printColored(f"Users Who Liked The Post - {website}", color="cyan")
+        for i in range(len(users)):
+            users[i] = "https://www.instagram.com/" + users[i] + "/"
+            self.ct.printColored(f"\t{users[i]}", color="green")
+        return users
     def getCommentUsers(self, website, rand=1):
         userPath = "//*[contains(@class, 'x1i10hfl xjqpnuy xa49m3k xqeqjp1 x2hbi6w xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli x1hl2dhg xggy1nq x1ja2u2z x1t137rt x1q0g3np x1lku1pv x1a2a7pz x6s0dn4 xjyslct x1ejq31n xd10rxx x1sy0etr x17r0tee x9f619 x1ypdohk x1f6kntn xwhw2v2 xl56j7k x17ydfre x2b8uid xlyipyv x87ps6o x14atkfc xcdnw81 x1i0vuye xjbqb8w xm3z3ea x1x8b98j x131883w x16mih1h x972fbf xcfux6l x1qhh985 xm0m39n xt0psk2 xt7dq6l xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x1n5bzlp xqnirrm xj34u2y x568u83')]"
         users = []
@@ -371,9 +447,6 @@ class InstagramBot:
             delay = 0.1
         namesThreadLoading = self.ct.getThreadForLoading(10, delay=delay)
         self.ct.loadingWhileScripting(namesThread, namesThreadLoading)
-
-
-
         for user in users:
             self.ct.printColored(f"\t{user}", color="green")
         return users

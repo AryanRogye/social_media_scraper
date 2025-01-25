@@ -51,7 +51,7 @@ if exist venv\Scripts\activate.bat (
     echo Error: Failed to create virtual environment.
     exit /b 1
 )
-pip install -r requirements.txt
+pip install -r wrequirements.txt
 call venv\Scripts\deactivate.bat
 
 :: Navigate to frontend and install npm packages
