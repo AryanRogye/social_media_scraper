@@ -9,6 +9,8 @@ import argparse
 from backend.social_media_scraper.logs_parser_tui import logsT
 
 def run_gui():
+    # I am Testing out a new way to run the gui
+    return
     script_path = os.path.join(os.path.dirname(__file__), "./backend/runG")
     ColorText().coolerLoading(10)
     ColorText().printColored("Launching GUI", color="green")
@@ -18,6 +20,8 @@ def run_gui():
         return
     except subprocess.CalledProcessError as e:
         ColorText().printColored(f"Error Launching GUI: {e}", color="red")
+
+
 def run_bot(user_to_scan, headless, max_retries, id_array, id_likes, id_comments):
     # Print The Values For The User
     ColorText().printSeparator();
